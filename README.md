@@ -1,7 +1,11 @@
 # Nethereum.Unity.Webgl
 Nethereum Unity Webgl sample starter (WIP)
 
-**Notes and thoughts: **
++ Entry point is the Metamask Controller: https://github.com/Nethereum/Nethereum.Unity.Webgl/blob/main/Assets/MetamaskController.cs
++ Only supported in 2021 and above due to emscripten
+
+## Notes and thoughts:
+
 + This is working, but the next steps will be to:
 + Refactor out to the core Nethereum.Unity library where possible
 + Create an interceptor, mainly a way to switch between MM, normal Nethereum or other provider to do requests, this way your code does not need change depending on your environment.
