@@ -108,7 +108,7 @@ public class MetamaskController : MonoBehaviour
                 {
                     var image = new Image();
                     _lstViewNFTs.hierarchy.Add(image);
-                    StartCoroutine(new ImageDowloaderTextureAssigner().DownloadAndSetImageTexture(item.Image, image));
+                    StartCoroutine(new ImageDownloaderTextureAssigner().DownloadAndSetImageTexture(item.Image, image));
                 }
             }
         }

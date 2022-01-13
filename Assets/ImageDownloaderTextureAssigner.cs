@@ -6,7 +6,7 @@ using System;
 using Nethereum.JsonRpc.UnityClient;
 using UnityEngine.Networking;
 
-public class ImageDowloaderTextureAssigner:UnityRequest<bool>
+public class ImageDownloaderTextureAssigner:UnityRequest<bool>
 {
     public IEnumerator DownloadAndSetImageTexture(string url, Image image)
     {
