@@ -6,6 +6,11 @@ Nethereum Unity Webgl sample starter (WIP)
 + Only supported in 2021 and above due to emscripten
 
 
+## Notes
+You index.html file needs to instantiate ```nethereumUnityInstance``` as per the example here:
+https://github.com/Nethereum/Nethereum.Unity.Webgl/blob/main/WebGl/index.html#L111
+
+
 ## Future thoughts, next steps:
 + Refactor out to the core Nethereum.Unity library where possible
 + Create an interceptor, mainly a way to switch between MM, normal Nethereum or other provider to do requests, this way your code does not need change depending on your environment (console, desktop, mobile, webgl)
