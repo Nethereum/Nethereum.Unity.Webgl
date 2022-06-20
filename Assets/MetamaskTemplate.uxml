@@ -1,18 +1,24 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Style.uss?fileID=7433441132597879392&amp;guid=fb7c83da9e4bf3245a793f63975a1efb&amp;type=3#Style" />
-    <ui:VisualElement style="background-color: rgb(255, 254, 254); height: 461px; width: 593px; flex-direction: column; justify-content: flex-start; align-items: center; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; position: absolute; top: 41px; left: 153px;">
+    <ui:VisualElement style="background-color: rgb(255, 254, 254); height: 554px; width: 593px; flex-direction: column; justify-content: flex-start; align-items: center; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; position: absolute; top: 47px; left: 159px;">
         <ui:Button display-tooltip-when-elided="true" tooltip="Metamask" name="metamask-button" class="button-style" style="border-left-color: rgb(3, 169, 244); border-right-color: rgb(3, 169, 244); border-top-color: rgb(3, 169, 244); border-bottom-color: rgb(3, 169, 244);">
             <ui:IMGUIContainer name="metamask-button-logo" style="background-image: url(&apos;project://database/Assets/metamask-fox.png?fileID=21300000&amp;guid=a8add13952448064ca00e6fa80948d68&amp;type=3#metamask-fox&apos;); height: 85px; width: 85px; position: absolute; left: auto; align-items: auto;" />
             <ui:Label text="Connect" display-tooltip-when-elided="true" name="metamask-button-text" style="height: 66px; width: 118px; color: rgb(53, 45, 45); font-size: 24px; -unity-text-align: middle-center; white-space: nowrap; align-items: auto; position: absolute; top: 7px; left: 95px; -unity-font-style: bold;" />
         </ui:Button>
         <ui:Label display-tooltip-when-elided="true" name="lbl-account-selected" text="Account Address" style="display: flex; visibility: hidden;" />
         <ui:Label display-tooltip-when-elided="true" name="lbl-error" style="display: flex; visibility: hidden; color: rgb(233, 19, 19);" />
-        <ui:VisualElement name="nft-container" style="height: 288px; width: 527px; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; background-color: rgb(0, 188, 212);">
+        <ui:VisualElement name="nft-container" style="height: 367px; width: 538px; border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; background-color: rgb(0, 188, 212);">
             <ui:GroupBox style="flex-direction: row; align-items: center; justify-content: flex-start;">
                 <ui:Button text="Deploy NFT Contract" display-tooltip-when-elided="true" name="btn-deploy-nft" class="button-style" style="height: 46px; width: 154px;" />
                 <ui:TextField picking-mode="Ignore" label="NFT Address:" name="txt-smartContract-Address" style="height: 40px; width: 352px; align-items: flex-start; justify-content: space-between; flex-direction: row;" />
             </ui:GroupBox>
-            <ui:ListView focusable="true" name="lst-nfts" horizontal-scrolling="false" header-title="NFTs" reorderable="true" />
+            <ui:GroupBox style="flex-direction: row; align-items: center; justify-content: flex-start;">
+                <ui:Button text="Mint NFT" display-tooltip-when-elided="true" name="btn-mint-nft" class="button-style" style="height: 46px; width: 154px;" />
+            </ui:GroupBox>
+            <ui:GroupBox style="flex-direction: row; align-items: center; justify-content: flex-start;">
+                <ui:Button text="View NFTs" display-tooltip-when-elided="true" name="btn-list-nfts" class="button-style" style="height: 46px; width: 154px;" />
+            </ui:GroupBox>
+            <ui:ListView focusable="true" name="lst-nfts" horizontal-scrolling="false" header-title="NFTs" reorderable="true" style="height: 156px;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

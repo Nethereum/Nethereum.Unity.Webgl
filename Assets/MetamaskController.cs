@@ -23,7 +23,7 @@ public class MetamaskController : MonoBehaviour
     private Button _btnMintNFT;
     private Label _lblAccountSelected;
     private Label _lblError;
-    private ScrollView _lstViewNFTs;
+    private ListView _lstViewNFTs;
     private TextField _txtSmartContractAddress;
 
     private string _selectedAccountAddress; // = "0x12890D2cce102216644c59daE5baed380d84830c";
@@ -37,7 +37,7 @@ public class MetamaskController : MonoBehaviour
         _lblAccountSelected = root.Q<Label>("lbl-account-selected");
         _btnMetamaskConnect = root.Q<Button>("metamask-button");
         _txtSmartContractAddress = root.Q<TextField>("txt-smartContract-Address");
-        _lstViewNFTs = root.Q<ScrollView>("lst-nfts");
+        _lstViewNFTs = root.Q<ListView>("lst-nfts");
 
         _btnViewNFTs = root.Q<Button>("btn-list-nfts");
         _btnMintNFT = root.Q<Button>("btn-mint-nft");
@@ -82,7 +82,11 @@ public class MetamaskController : MonoBehaviour
 
     public IEnumerator GetAllNFTImages()
     {
-        _lstViewNFTs.hierarchy.Clear();
+        try
+        {
+            _lstViewNFTs.hierarchy.Clear();
+        }
+        catch { }
         var nftsOfUser = new NFTsOfUserUnityRequest(GetRpcUrl(), _selectedAccountAddress);
         yield return nftsOfUser.GetAllMetadataUrls(_currentContractAddress, _selectedAccountAddress);
 
@@ -91,6 +95,8 @@ public class MetamaskController : MonoBehaviour
             DisplayError(nftsOfUser.Exception.Message);
             yield break;
         }
+
+        Debug.LogWarning(nftsOfUser.Result.Count);
 
         if (nftsOfUser.Result != null)
         {
@@ -108,6 +114,7 @@ public class MetamaskController : MonoBehaviour
                 {
                     var image = new Image();
                     _lstViewNFTs.hierarchy.Add(image);
+                    Debug.LogWarning(item.Image);
                     StartCoroutine(new ImageDownloaderTextureAssigner().DownloadAndSetImageTexture(item.Image, image));
                 }
             }
