@@ -1,10 +1,10 @@
 # Nethereum.Unity.Webgl
 Nethereum Unity Webgl sample starter (WIP)
 
-+ All working but needs refactoring etc (see future thoughts)
+Example on how to integrate a WebGl unity project with Metamask, Deploy an ERC721 smartcontract (NFT) and interact with the smart contract minting a token and retrieving the asset (image) associated with it.
+
 + Entry point is the Metamask Controller: https://github.com/Nethereum/Nethereum.Unity.Webgl/blob/main/Assets/MetamaskController.cs
 + Only supported in 2021 and above due to emscripten
-
 
 ## Notes
 You index.html file needs to instantiate ```nethereumUnityInstance``` as per the example here:
