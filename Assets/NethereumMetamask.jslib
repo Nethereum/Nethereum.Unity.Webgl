@@ -98,6 +98,47 @@
         }
     },
 
+    RequestRpcClientCallback: async function (callback, message) {
+        const parsedMessageStr = UTF8ToString(message);
+        const parsedCallback = UTF8ToString(callback);
+        try {
+            
+            let parsedMessage = JSON.parse(parsedMessageStr);
+            console.log(parsedMessage);
+            const response = await ethereum.request(parsedMessage);
+            let rpcResponse = {
+                jsonrpc: "2.0",
+                result: response,
+                id: parsedMessage.id,
+                error: null
+            }
+            console.log(rpcResponse);
+
+            var json = JSON.stringify(rpcResponse);
+            console.log(json);
+           
+            var len = lengthBytesUTF8(json) + 1;
+            var strPtr = _malloc(len);
+            stringToUTF8(json, strPtr, len);
+            Module.dynCall_vi(callback, strPtr);
+
+            return json;
+        } catch (e) {
+            let rpcResonseError = {
+                jsonrpc: "2.0",
+                id: parsedMessage.id,
+                error: {
+                    message: e,
+                }
+            }
+            var json = JSON.stringify(rpcResonseError);
+            var len = lengthBytesUTF8(json) + 1;
+            var strPtr = _malloc(len);
+            stringToUTF8(json, strPtr, len);
+            Module.dynCall_vi(callback, strPtr);
+        }
+    },
+
     Send: async function (message) {
         return new Promise(function (resolve, reject) {
             console.log(JSON.parse(message));

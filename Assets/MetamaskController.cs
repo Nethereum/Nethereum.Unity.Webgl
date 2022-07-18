@@ -2,16 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Nethereum.Metamask;
 //using Nethereum.JsonRpc.UnityClient;
 using System;
 using Nethereum.JsonRpc.UnityClient;
 using Nethereum.Hex.HexTypes;
 using System.Numerics;
-using Nethereum.ABI.FunctionEncoding.Attributes;
-using Nethereum.Contracts;
-using Newtonsoft.Json.Linq;
 using ERC721ContractLibrary.Contracts.ERC721PresetMinterPauserAutoId.ContractDefinition;
+using Nethereum.Unity.Metamask;
 
 //Test external contract 0x345c2fa23160c63218dfaa25d37269f26c85ca47
 //0x2002050e7084f5db6ac4e81d54fbb6b35c257592 address
@@ -31,6 +28,7 @@ public class MetamaskController : MonoBehaviour
     private BigInteger _currentChainId; //444444444500;
     private string _currentContractAddress; // = "0x32eb97b8ad202b072fd9066c03878892426320ed";
 
+
     void Start()
     {
         var root = GetComponent<UIDocument>().rootVisualElement;
@@ -49,7 +47,7 @@ public class MetamaskController : MonoBehaviour
         _btnDeployNFTContract.clicked += _btnDeployNFTContract_clicked;
         _btnMintNFT.clicked += _btnMintNFT_clicked;
         _btnViewNFTs.clicked += _btnViewNFTs_clicked;
-
+  
         
     }
 
@@ -67,17 +65,11 @@ public class MetamaskController : MonoBehaviour
     {
         if (MetamaskInterop.IsMetamaskAvailable())
         {
-            var x = new MetamaskTransactionUnityRequest(GetRpcUrl(), _selectedAccountAddress);
+            var metamaskTransactionUnityRequest = new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
 
-            yield return x.SendTransaction<MintFunction>(new MintFunction() { To = _selectedAccountAddress}, _currentContractAddress, gameObject.name, nameof(MintedResponse), nameof(DisplayError));
-
+            yield return metamaskTransactionUnityRequest.SignAndSendTransaction<MintFunction>(new MintFunction() { To = _selectedAccountAddress}, _currentContractAddress);
+            print(metamaskTransactionUnityRequest.Result);
         }
-    }
-
-    public void MintedResponse(string rpcResponse)
-    {
-        var txnHash = MetamaskTransactionUnityRequest.DeserialiseTxnHashFromResponse(rpcResponse);
-        print(txnHash);
     }
 
     public IEnumerator GetAllNFTImages()
@@ -87,7 +79,7 @@ public class MetamaskController : MonoBehaviour
             _lstViewNFTs.hierarchy.Clear();
         }
         catch { }
-        var nftsOfUser = new NFTsOfUserUnityRequest(GetRpcUrl(), _selectedAccountAddress);
+        var nftsOfUser = new NFTsOfUserUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
         yield return nftsOfUser.GetAllMetadataUrls(_currentContractAddress, _selectedAccountAddress);
 
         if (nftsOfUser.Exception != null)
@@ -131,7 +123,7 @@ public class MetamaskController : MonoBehaviour
     {
         if (MetamaskInterop.IsMetamaskAvailable())
         {
-            var x = new MetamaskTransactionUnityRequest(GetRpcUrl(), _selectedAccountAddress);
+            var metamaskTransactionUnityRequest = new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
 
             var erc721PresetMinter = new ERC721PresetMinterPauserAutoIdDeployment()
             {
@@ -140,23 +132,22 @@ public class MetamaskController : MonoBehaviour
                 Symbol = "NFA"
             };
 
-            yield return x.SendDeploymentContractTransaction<ERC721PresetMinterPauserAutoIdDeployment>(erc721PresetMinter, gameObject.name, nameof(DeploySmartContractResponse), nameof(DisplayError));
+            yield return metamaskTransactionUnityRequest.SignAndSendDeploymentContractTransaction<ERC721PresetMinterPauserAutoIdDeployment>(erc721PresetMinter);
+
+            if(metamaskTransactionUnityRequest.Exception == null)
+            {
+                yield return GetDeploymentSmartContractAddressFromReceipt(metamaskTransactionUnityRequest.Result);
+            }
 
         }
     }
 
-    public void DeploySmartContractResponse(string rpcResponse)
-    {
-		print("deployment response:" + rpcResponse);
-		var txnHash = MetamaskTransactionUnityRequest.DeserialiseTxnHashFromResponse(rpcResponse);
-		StartCoroutine(GetDeploymentSmartContractAddressFromReceipt(txnHash));
-    }
 
     private IEnumerator GetDeploymentSmartContractAddressFromReceipt(string transactionHash)
     {
 		print(transactionHash);
 		//create a poll to get the receipt when mined
-		var transactionReceiptPolling = new TransactionReceiptPollingRequest(GetRpcUrl());
+		var transactionReceiptPolling = new TransactionReceiptPollingRequest(GetUnityRpcRequestClientFactory());
 
         //checking every 2 seconds for the receipt
         yield return transactionReceiptPolling.PollForReceipt(transactionHash, 2);
@@ -232,40 +223,25 @@ public class MetamaskController : MonoBehaviour
 
     private IEnumerator GetBlockNumber()
     {
-        string url = GetRpcUrl();
-        var blockNumberRequest = new EthBlockNumberUnityRequest(url);
+        var blockNumberRequest = new EthBlockNumberUnityRequest(GetUnityRpcRequestClientFactory());
         yield return blockNumberRequest.SendRequest();
         print(blockNumberRequest.Result.Value);
     }
 
-    public string GetRpcUrl()
+    public IUnityRpcRequestClientFactory GetUnityRpcRequestClientFactory()
     {
-        string infuraId = "206cfadcef274b49a3a15c45c285211c";
-        switch ((long)_currentChainId)
+#if UNITY_WEBGL
+        if (MetamaskInterop.IsMetamaskAvailable()) 
         {
-            case 0: //not configured go to mainnet
-            case 1:
-                return "https://mainnet.infura.io/v3/" + infuraId;
-            case 3:
-                return "https://ropsten.infura.io/v3/" + infuraId;
-            case 4:
-                return "https://rinkeby.infura.io/v3/" + infuraId;
-            case 42:
-                return "https://kovan.infura.io/v3/" + infuraId;
-            case 444444444500:
-                return "http://localhost:8545";
-            default:
-                {
-                    DisplayError("Chain: " + _currentChainId + " not configured");
-                    break;
-                }
-
+            return new MetamaskRequestRpcClientFactory(_selectedAccountAddress);
         }
-
-        throw new Exception("Chain: " + _currentChainId + " not configured");
-       
+        else
+        {
+            throw new Exception("Metamask not available");
+        }
+#endif
+        return new UnityWebRequestRpcClientFactory("http://localhost:8545");
     }
-
 
     // Update is called once per frame
     void Update()
