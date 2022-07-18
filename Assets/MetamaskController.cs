@@ -9,6 +9,8 @@ using Nethereum.Hex.HexTypes;
 using System.Numerics;
 using ERC721ContractLibrary.Contracts.ERC721PresetMinterPauserAutoId.ContractDefinition;
 using Nethereum.Unity.Metamask;
+using Nethereum.Unity.Contracts;
+using Nethereum.Contracts;
 
 //Test external contract 0x345c2fa23160c63218dfaa25d37269f26c85ca47
 //0x2002050e7084f5db6ac4e81d54fbb6b35c257592 address
@@ -63,11 +65,13 @@ public class MetamaskController : MonoBehaviour
 
     public IEnumerator MintNFT()
     {
-        if (MetamaskInterop.IsMetamaskAvailable())
-        {
-            var metamaskTransactionUnityRequest = new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+        var metamaskTransactionUnityRequest = GetContractTransactionUnityRequest();
 
-            yield return metamaskTransactionUnityRequest.SignAndSendTransaction<MintFunction>(new MintFunction() { To = _selectedAccountAddress}, _currentContractAddress);
+        if (metamaskTransactionUnityRequest != null)
+        {
+            var mintFunction = new MintFunction() { To = _selectedAccountAddress };
+           
+            yield return metamaskTransactionUnityRequest.SignAndSendTransaction<MintFunction>(mintFunction, _currentContractAddress);
             print(metamaskTransactionUnityRequest.Result);
         }
     }
@@ -121,10 +125,10 @@ public class MetamaskController : MonoBehaviour
 
     private IEnumerator DeploySmartContract()
     {
-        if (MetamaskInterop.IsMetamaskAvailable())
-        {
-            var metamaskTransactionUnityRequest = new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+        var metamaskTransactionUnityRequest = GetContractTransactionUnityRequest();
 
+        if (metamaskTransactionUnityRequest != null)
+        {
             var erc721PresetMinter = new ERC721PresetMinterPauserAutoIdDeployment()
             {
                 BaseURI = "https://my-json-server.typicode.com/juanfranblanco/samplenftdb/tokens/", //This is a simple example using a centralised server.. use ipfs etc for a proper decentralised inmutable
@@ -134,12 +138,13 @@ public class MetamaskController : MonoBehaviour
 
             yield return metamaskTransactionUnityRequest.SignAndSendDeploymentContractTransaction<ERC721PresetMinterPauserAutoIdDeployment>(erc721PresetMinter);
 
-            if(metamaskTransactionUnityRequest.Exception == null)
+            if (metamaskTransactionUnityRequest.Exception == null)
             {
                 yield return GetDeploymentSmartContractAddressFromReceipt(metamaskTransactionUnityRequest.Result);
             }
 
         }
+    
     }
 
 
@@ -162,7 +167,7 @@ public class MetamaskController : MonoBehaviour
     private void MetamaskConnectButton_Clicked()
     {
         _lblError.visible = false;
-#if UNITY_WEBGL
+#if !DEBUG
         if (MetamaskInterop.IsMetamaskAvailable())
         {
             MetamaskInterop.EnableEthereum(gameObject.name, nameof(EthereumEnabled), nameof(DisplayError));
@@ -177,7 +182,7 @@ public class MetamaskController : MonoBehaviour
 
     public void EthereumEnabled(string addressSelected)
     {
-#if UNITY_WEBGL
+#if !DEBUG
         if (!_isMetamaskInitialised)
         {
             MetamaskInterop.EthereumInit(gameObject.name, nameof(NewAccountSelected), nameof(ChainChanged));
@@ -230,17 +235,37 @@ public class MetamaskController : MonoBehaviour
 
     public IUnityRpcRequestClientFactory GetUnityRpcRequestClientFactory()
     {
-#if UNITY_WEBGL
+#if !DEBUG
         if (MetamaskInterop.IsMetamaskAvailable()) 
         {
             return new MetamaskRequestRpcClientFactory(_selectedAccountAddress);
         }
         else
         {
-            throw new Exception("Metamask not available");
+            DisplayError("Metamask is not available, please install it");
+            return null;
         }
 #endif
+        _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
         return new UnityWebRequestRpcClientFactory("http://localhost:8545");
+    }
+
+
+    public IContractTransactionUnityRequest GetContractTransactionUnityRequest()
+    {
+#if !DEBUG
+        if (MetamaskInterop.IsMetamaskAvailable())
+        {
+            return new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+        }
+        else
+        {
+            DisplayError("Metamask is not available, please install it");
+            return null;
+        }
+#endif
+        _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
+        return new TransactionSignedUnityRequest("http://localhost:8545", "0xb5b1870957d373ef0eeffecc6e4812c0fd08f554b37b233526acc331bf1544f7", 444444444500);
     }
 
     // Update is called once per frame
