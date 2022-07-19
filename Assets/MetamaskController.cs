@@ -4,13 +4,16 @@ using UnityEngine;
 using UnityEngine.UIElements;
 //using Nethereum.JsonRpc.UnityClient;
 using System;
-using Nethereum.JsonRpc.UnityClient;
 using Nethereum.Hex.HexTypes;
 using System.Numerics;
 using ERC721ContractLibrary.Contracts.ERC721PresetMinterPauserAutoId.ContractDefinition;
 using Nethereum.Unity.Metamask;
 using Nethereum.Unity.Contracts;
 using Nethereum.Contracts;
+using Nethereum.Unity.Contracts.Standards.ERC721;
+using Nethereum.Contracts.Standards.ERC721;
+using Nethereum.Unity.Utils.Drawing;
+using Nethereum.Unity.Rpc;
 
 //Test external contract 0x345c2fa23160c63218dfaa25d37269f26c85ca47
 //0x2002050e7084f5db6ac4e81d54fbb6b35c257592 address
@@ -65,14 +68,14 @@ public class MetamaskController : MonoBehaviour
 
     public IEnumerator MintNFT()
     {
-        var metamaskTransactionUnityRequest = GetContractTransactionUnityRequest();
+        var contractTransactionUnityRequest = GetContractTransactionUnityRequest();
 
-        if (metamaskTransactionUnityRequest != null)
+        if (contractTransactionUnityRequest != null)
         {
             var mintFunction = new MintFunction() { To = _selectedAccountAddress };
            
-            yield return metamaskTransactionUnityRequest.SignAndSendTransaction<MintFunction>(mintFunction, _currentContractAddress);
-            print(metamaskTransactionUnityRequest.Result);
+            yield return contractTransactionUnityRequest.SignAndSendTransaction<MintFunction>(mintFunction, _currentContractAddress);
+            print(contractTransactionUnityRequest.Result);
         }
     }
 
@@ -125,9 +128,9 @@ public class MetamaskController : MonoBehaviour
 
     private IEnumerator DeploySmartContract()
     {
-        var metamaskTransactionUnityRequest = GetContractTransactionUnityRequest();
+        var contractTransactionUnityRequest = GetContractTransactionUnityRequest();
 
-        if (metamaskTransactionUnityRequest != null)
+        if (contractTransactionUnityRequest != null)
         {
             var erc721PresetMinter = new ERC721PresetMinterPauserAutoIdDeployment()
             {
@@ -136,11 +139,11 @@ public class MetamaskController : MonoBehaviour
                 Symbol = "NFA"
             };
 
-            yield return metamaskTransactionUnityRequest.SignAndSendDeploymentContractTransaction<ERC721PresetMinterPauserAutoIdDeployment>(erc721PresetMinter);
+            yield return contractTransactionUnityRequest.SignAndSendDeploymentContractTransaction<ERC721PresetMinterPauserAutoIdDeployment>(erc721PresetMinter);
 
-            if (metamaskTransactionUnityRequest.Exception == null)
+            if (contractTransactionUnityRequest.Exception == null)
             {
-                yield return GetDeploymentSmartContractAddressFromReceipt(metamaskTransactionUnityRequest.Result);
+                yield return GetDeploymentSmartContractAddressFromReceipt(contractTransactionUnityRequest.Result);
             }
 
         }
