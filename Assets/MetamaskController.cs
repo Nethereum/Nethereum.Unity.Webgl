@@ -75,7 +75,15 @@ public class MetamaskController : MonoBehaviour
             var mintFunction = new MintFunction() { To = _selectedAccountAddress };
            
             yield return contractTransactionUnityRequest.SignAndSendTransaction<MintFunction>(mintFunction, _currentContractAddress);
-            print(contractTransactionUnityRequest.Result);
+            if(contractTransactionUnityRequest.Exception == null)
+            {
+                print(contractTransactionUnityRequest.Result);
+            }
+            else
+            {
+                DisplayError(contractTransactionUnityRequest.Exception.Message);
+            }
+            
         }
     }
 
@@ -144,6 +152,10 @@ public class MetamaskController : MonoBehaviour
             if (contractTransactionUnityRequest.Exception == null)
             {
                 yield return GetDeploymentSmartContractAddressFromReceipt(contractTransactionUnityRequest.Result);
+            }
+            else
+            {
+                DisplayError(contractTransactionUnityRequest.Exception.Message);
             }
 
         }
@@ -241,7 +253,7 @@ public class MetamaskController : MonoBehaviour
 #if !DEBUG
         if (MetamaskInterop.IsMetamaskAvailable()) 
         {
-            return new MetamaskRequestRpcClientFactory(_selectedAccountAddress);
+            return new MetamaskRequestRpcClientFactory(_selectedAccountAddress, null, 1000);
         }
         else
         {
