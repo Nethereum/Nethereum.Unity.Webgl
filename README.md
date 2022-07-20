@@ -1,5 +1,5 @@
 # Nethereum.Unity.Webgl
-Nethereum Unity Webgl sample starter (WIP)
+Nethereum Unity Webgl sample starter 
 
 Example on how to integrate a WebGl unity project with Metamask, Deploy an ERC721 smartcontract (NFT) and interact with the smart contract minting a token and retrieving the asset (image) associated with it.
 
@@ -14,8 +14,6 @@ https://github.com/Nethereum/Nethereum.Unity.Webgl/blob/main/WebGl/index.html#L1
 
 
 ## Future thoughts, next steps:
-+ Refactor out to the core Nethereum.Unity library where possible
-+ Create an interceptor, mainly a way to switch between MM, normal Nethereum or other provider to do requests, this way your code does not need change depending on your environment (console, desktop, mobile, webgl)
-+ Figure out a better way to handle call backs, (maybe wait for a concurrent queue of responses held statically) ideally within the interop service, so interaction is the same as other calls (see above)
+Include in the sample WalletConnect, probably using a submodule to provide the integration guidelines.
 
 
