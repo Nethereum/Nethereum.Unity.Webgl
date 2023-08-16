@@ -181,31 +181,34 @@ public class MetamaskController : MonoBehaviour
 
     private void MetamaskConnectButton_Clicked()
     {
+        Debug.Log("Connect");
         _lblError.visible = false;
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable())
+
+        Debug.Log("Connect Run");
+
+        if (MetamaskWebglInterop.IsMetamaskAvailable())
         {
-            MetamaskInterop.EnableEthereum(gameObject.name, nameof(EthereumEnabled), nameof(DisplayError));
+            MetamaskWebglInterop.EnableEthereum(gameObject.name, nameof(EthereumEnabled), nameof(DisplayError));
         }
         else
         {
             DisplayError("Metamask is not available, please install it");
         }
-#endif
+
 
     }
 
     public void EthereumEnabled(string addressSelected)
     {
-#if !DEBUG
+
         if (!_isMetamaskInitialised)
         {
-            MetamaskInterop.EthereumInit(gameObject.name, nameof(NewAccountSelected), nameof(ChainChanged));
-            MetamaskInterop.GetChainId(gameObject.name, nameof(ChainChanged), nameof(DisplayError));
+            MetamaskWebglInterop.EthereumInit(gameObject.name, nameof(NewAccountSelected), nameof(ChainChanged));
+            MetamaskWebglInterop.GetChainId(gameObject.name, nameof(ChainChanged), nameof(DisplayError));
             _isMetamaskInitialised = true;
         }
         NewAccountSelected(addressSelected);
-#endif
+
     }
 
     public void ChainChanged(string chainId)
@@ -250,17 +253,17 @@ public class MetamaskController : MonoBehaviour
 
     public IUnityRpcRequestClientFactory GetUnityRpcRequestClientFactory()
     {
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable()) 
+
+        if (MetamaskWebglInterop.IsMetamaskAvailable()) 
         {
-            return new MetamaskRequestRpcClientFactory(_selectedAccountAddress, null, 1000);
+            return new MetamaskWebglCoroutineRequestRpcClientFactory(_selectedAccountAddress, null, 1000);
         }
         else
         {
             DisplayError("Metamask is not available, please install it");
             return null;
         }
-#endif
+
         _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
         return new UnityWebRequestRpcClientFactory("http://localhost:8545");
     }
@@ -268,17 +271,17 @@ public class MetamaskController : MonoBehaviour
 
     public IContractTransactionUnityRequest GetContractTransactionUnityRequest()
     {
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable())
+
+        if (MetamaskWebglInterop.IsMetamaskAvailable())
         {
-            return new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+            return new MetamaskTransactionCoroutineUnityRequest (_selectedAccountAddress, GetUnityRpcRequestClientFactory());
         }
         else
         {
             DisplayError("Metamask is not available, please install it");
             return null;
         }
-#endif
+
         _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
         return new TransactionSignedUnityRequest("http://localhost:8545", "0xb5b1870957d373ef0eeffecc6e4812c0fd08f554b37b233526acc331bf1544f7", 444444444500);
     }
