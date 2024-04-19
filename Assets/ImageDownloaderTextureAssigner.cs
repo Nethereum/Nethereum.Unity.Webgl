@@ -15,6 +15,7 @@ namespace Nethereum.Unity.Utils.Drawing
     {
         public IEnumerator DownloadAndSetImageTexture(string url, Image image)
         {
+            IpfsUrlService.DefaultIpfsGateway = "https://ipfs.io/ipfs/";
             url = IpfsUrlService.ResolveIpfsUrlGateway(url);
             using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
             {

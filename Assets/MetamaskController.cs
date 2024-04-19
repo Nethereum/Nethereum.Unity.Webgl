@@ -14,9 +14,12 @@ using Nethereum.Unity.Contracts.Standards.ERC721;
 using Nethereum.Contracts.Standards.ERC721;
 using Nethereum.Unity.Utils.Drawing;
 using Nethereum.Unity.Rpc;
+using Nethereum.Metamask;
 
 //Test external contract 0x345c2fa23160c63218dfaa25d37269f26c85ca47
 //0x2002050e7084f5db6ac4e81d54fbb6b35c257592 address
+//This is example uses coroutines, you can use the async await pattern if you prefer using the WebglThreadPatcher and vanilla Nethereum
+//Check the https://github.com/Nethereum/Unity3dSampleTemplate for more examples using the async await pattern
 public class MetamaskController : MonoBehaviour
 {
     private Button _btnMetamaskConnect;
@@ -32,6 +35,7 @@ public class MetamaskController : MonoBehaviour
     private bool _isMetamaskInitialised= false;
     private BigInteger _currentChainId; //444444444500;
     private string _currentContractAddress; // = "0x32eb97b8ad202b072fd9066c03878892426320ed";
+
 
 
     void Start()
@@ -64,6 +68,15 @@ public class MetamaskController : MonoBehaviour
     private void _btnMintNFT_clicked()
     {
         StartCoroutine(MintNFT());
+    }
+
+    public bool IsWebGL()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return true;
+#else
+        return false;
+#endif
     }
 
     public IEnumerator MintNFT()
@@ -122,9 +135,19 @@ public class MetamaskController : MonoBehaviour
                     var image = new Image();
                     _lstViewNFTs.hierarchy.Add(image);
                     Debug.LogWarning(item.Image);
-                    StartCoroutine(new ImageDownloaderTextureAssigner().DownloadAndSetImageTexture(item.Image, image));
+                    StartCoroutine(DownloadAndSetImageTexture(item.Image, image));
                 }
             }
+        }
+    }
+
+    private IEnumerator DownloadAndSetImageTexture(string imagePath, Image image)
+    {
+        var imagedownloader = new ImageDownloaderTextureAssigner();
+        yield return imagedownloader.DownloadAndSetImageTexture(imagePath, image);
+        if (imagedownloader.Exception != null)
+        {
+            DisplayError(imagedownloader.Exception.Message);
         }
     }
    
@@ -142,7 +165,7 @@ public class MetamaskController : MonoBehaviour
         {
             var erc721PresetMinter = new ERC721PresetMinterPauserAutoIdDeployment()
             {
-                BaseURI = "https://my-json-server.typicode.com/juanfranblanco/samplenftdb/tokens/", //This is a simple example using a centralised server.. use ipfs etc for a proper decentralised inmutable
+                BaseURI = "https://my-json-server.typicode.com/juanfranblanco/samplenftdb/tokens/", //This is a simple example using a centralised server.. use ipfs etc for a proper decentralised immutable
                 Name = "NFTArt",
                 Symbol = "NFA"
             };
@@ -182,30 +205,33 @@ public class MetamaskController : MonoBehaviour
     private void MetamaskConnectButton_Clicked()
     {
         _lblError.visible = false;
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable())
+        if (IsWebGL())
         {
-            MetamaskInterop.EnableEthereum(gameObject.name, nameof(EthereumEnabled), nameof(DisplayError));
+            if (MetamaskWebglInterop.IsMetamaskAvailable())
+            {
+                MetamaskWebglInterop.EnableEthereum(gameObject.name, nameof(EthereumEnabled), nameof(DisplayError));
+            }
+            else
+            {
+                DisplayError("Metamask is not available, please install it");
+            }
         }
-        else
-        {
-            DisplayError("Metamask is not available, please install it");
-        }
-#endif
+
 
     }
 
     public void EthereumEnabled(string addressSelected)
     {
-#if !DEBUG
-        if (!_isMetamaskInitialised)
+        if (IsWebGL())
         {
-            MetamaskInterop.EthereumInit(gameObject.name, nameof(NewAccountSelected), nameof(ChainChanged));
-            MetamaskInterop.GetChainId(gameObject.name, nameof(ChainChanged), nameof(DisplayError));
-            _isMetamaskInitialised = true;
+            if (!_isMetamaskInitialised)
+            {
+                MetamaskWebglInterop.EthereumInit(gameObject.name, nameof(NewAccountSelected), nameof(ChainChanged));
+                MetamaskWebglInterop.GetChainId(gameObject.name, nameof(ChainChanged), nameof(DisplayError));
+                _isMetamaskInitialised = true;
+            }
+            NewAccountSelected(addressSelected);
         }
-        NewAccountSelected(addressSelected);
-#endif
     }
 
     public void ChainChanged(string chainId)
@@ -250,37 +276,46 @@ public class MetamaskController : MonoBehaviour
 
     public IUnityRpcRequestClientFactory GetUnityRpcRequestClientFactory()
     {
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable()) 
+        if (IsWebGL())
         {
-            return new MetamaskRequestRpcClientFactory(_selectedAccountAddress, null, 1000);
+            if (MetamaskWebglInterop.IsMetamaskAvailable())
+            {
+                return new MetamaskWebglCoroutineRequestRpcClientFactory(_selectedAccountAddress, null, 1000);
+            }
+            else
+            {
+                DisplayError("Metamask is not available, please install it");
+                return null;
+            }
         }
         else
         {
-            DisplayError("Metamask is not available, please install it");
-            return null;
+            _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
+            return new UnityWebRequestRpcClientFactory("http://localhost:8545");
         }
-#endif
-        _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
-        return new UnityWebRequestRpcClientFactory("http://localhost:8545");
     }
 
 
     public IContractTransactionUnityRequest GetContractTransactionUnityRequest()
     {
-#if !DEBUG
-        if (MetamaskInterop.IsMetamaskAvailable())
+        if (IsWebGL())
         {
-            return new MetamaskTransactionUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+            if (MetamaskWebglInterop.IsMetamaskAvailable())
+            {
+                return new MetamaskTransactionCoroutineUnityRequest(_selectedAccountAddress, GetUnityRpcRequestClientFactory());
+            }
+            else
+            {
+                DisplayError("Metamask is not available, please install it");
+                return null;
+            }
         }
         else
         {
-            DisplayError("Metamask is not available, please install it");
-            return null;
+            //this uses the "Nethereum" test account and chainId.. change to your own if needed
+            _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
+            return new TransactionSignedUnityRequest("http://localhost:8545", "0xb5b1870957d373ef0eeffecc6e4812c0fd08f554b37b233526acc331bf1544f7", 444444444500);
         }
-#endif
-        _selectedAccountAddress = "0x12890D2cce102216644c59daE5baed380d84830c";
-        return new TransactionSignedUnityRequest("http://localhost:8545", "0xb5b1870957d373ef0eeffecc6e4812c0fd08f554b37b233526acc331bf1544f7", 444444444500);
     }
 
     // Update is called once per frame
